@@ -1,0 +1,122 @@
+/* ---- Base ---- */
+QWidget {
+    background: #F5F6F7;
+    color: #1A1A1A;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 12px;
+}
+
+/* ---- Buttons ---- */
+QPushButton {
+    background: #FFFFFF;
+    border: 1px solid #C6C6C6;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+QPushButton:hover {
+    background: #E9ECEF;
+}
+QPushButton:pressed {
+    background: #DDE0E3;
+}
+QPushButton:disabled {
+    background: #E0E0E0;
+    color: #A0A0A0;
+}
+
+/* ---- Line edits / inputs ---- */
+QLineEdit, QSpinBox, QComboBox {
+    background: #FFFFFF;
+    border: 1px solid #BEBEBE;
+    border-radius: 4px;
+    padding: 3px;
+}
+QLineEdit:focus, QSpinBox:focus, QComboBox:focus {
+    border: 1px solid #4A90E2;
+}
+
+/* ---- Menus ---- */
+QMenu {
+    background: #FFFFFF;
+    border: 1px solid #D0D0D0;
+}
+QMenu::item:selected {
+    background: #E9ECEF;
+}
+
+/* ---- Status Label ---- */
+QLabel#statusLabel {
+    font-weight: bold;
+}
+
+/* ---- Scrollbars ---- */
+QScrollBar:vertical {
+    width: 10px;
+    background: transparent;
+}
+QScrollBar::handle:vertical {
+    background: #C8C8C8;
+    border-radius: 4px;
+}
+QScrollBar::handle:vertical:hover {
+    background: #A8A8A8;
+}
+
+/* Graphic view background */
+QGraphicsView {
+    background: #FDFDFD;
+}
+
+QCheckBox::indicator {
+    width: 40px;
+    height: 20px;
+}
+
+QCheckBox::indicator:unchecked {
+    background-color: #b3b3b3;
+    border-radius: 10px;
+    border: 1px solid #888;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #4a90e2;
+    border-radius: 10px;
+    border: 1px solid #4a90e2;
+}
+
+/* Toggle Switch */
+QCheckBox::indicator {
+    width: 40px;
+    height: 20px;
+}
+
+QCheckBox::indicator:unchecked {
+    background-color: #4A4A4A;        /* darker track */
+    border-radius: 10px;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #3A6EA5;        /* blue-ish track */
+    border-radius: 10px;
+}
+
+QCheckBox::indicator:unchecked::before,
+QCheckBox::indicator:checked::before {
+    content: "";
+    position: relative;
+    display: block;
+    width: 18px;
+    height: 18px;
+    background: #525252;              /* dark thumb */
+    border-radius: 9px;
+    transition: margin-left 150ms;
+}
+
+QCheckBox::indicator:unchecked::before {
+    margin-left: 1px;
+}
+
+QCheckBox::indicator:checked::before {
+    margin-left: 21px;
+}
+

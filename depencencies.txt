@@ -1,0 +1,17 @@
+Python >= 3.9
+
+Required Packages:
+------------------
+PySide6
+networkx
+numpy
+
+These may already be installed, but confirm or install manually:
+    pip install PySide6
+    pip install networkx
+    pip install numpy
+
+Optional (used only when loading graphs from XML-formatted files):
+    xml.etree (included in Python standard library)
+
+No internet access is required to run the GUI and solver.

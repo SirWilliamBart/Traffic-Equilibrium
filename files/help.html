@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Traffic Graph Explorer — Uživatelský manuál (Návrh)</title>
+  <style>
+    :root{
+      --bg:#0b0c10;--panel:#111218;--text:#e8ecf1;--muted:#a8b0bb;--brand:#2196f3;--ok:#2da44e;--warn:#c69026;--err:#d03d3d;
+      --card:#151821;--border:#232635;--code:#0f1117;--kbd:#1b1e28
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif}
+    main{max-width:1100px;margin:0 auto;padding:40px 20px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px}
+    h1{font-size:clamp(1.6rem,1.2rem+2vw,2.4rem);margin:0}
+    .version{color:var(--muted);font-size:.95rem}
+    nav.toc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin:24px 0}
+    nav.toc h2{margin:0 0 8px 0;font-size:1.1rem}
+    nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:6px 8px;border-radius:8px}
+    nav.toc a:hover{background:#1d2130;color:var(--text)}
+    section{margin:40px 0}
+    h2{margin:0 0 12px 0;font-size:1.45rem}
+    h3{margin:22px 0 8px 0;font-size:1.15rem;color:#d7deea}
+    p{margin:10px 0}
+    .grid{display:grid;gap:16px}
+    .grid.two{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+    ul{margin:10px 0 10px 22px}
+    code{background:var(--code);border:1px solid var(--border);padding:.15rem .35rem;border-radius:8px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.95em}
+    pre{background:var(--code);border:1px solid var(--border);border-radius:12px;padding:12px;overflow:auto}
+    kbd{background:var(--kbd);border:1px solid var(--border);border-bottom-color:#0e1016;color:#eaf2ff;border-radius:6px;padding:0 .4rem;font:600 .85rem ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .label{display:inline-block;border:1px solid var(--border);background:#151a24;padding:.15rem .5rem;border-radius:999px;color:#b8c2d3;font-size:.85rem}
+    .tip{border-left:4px solid var(--brand);padding:12px 14px;background:#0f1320;border-radius:8px;margin:12px 0}
+    .warn{border-left:4px solid var(--warn);background:#1b1407}
+    .ok{border-left:4px solid var(--ok);background:#0f1a14}
+    table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    th,td{padding:10px 12px;border-bottom:1px solid var(--border)}
+    th{background:#171b26;text-align:left}
+    tr:last-child td{border-bottom:none}
+    footer{margin-top:60px;color:var(--muted);font-size:.9rem}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Traffic Graph Explorer — Uživatelský manuál <span class="label">Návrh</span></h1>
+    <div class="version">Aplikace: <code>Traffic Graph Explorer (Directed + Multi-OD)</code> · UI modul: <code>MainWindowUI</code></div>
+  </header>
+
+  <nav class="toc">
+    <h2>Obsah</h2>
+    <a href="#overview">1. Přehled</a>
+    <a href="#requirements">2. Požadavky</a>
+    <a href="#install">3. Instalace</a>
+    <a href="#launch">4. Spuštění aplikace</a>
+    <a href="#ui-tour">5. Přehled rozhraní</a>
+    <a href="#graphs">6. Práce s grafy</a>
+    <a href="#od">7. Správa OD párů</a>
+    <a href="#solver">8. Výpočet toků</a>
+    <a href="#files">9. Načítání a ukládání</a>
+    <a href="#themes">10. Motivy</a>
+    <a href="#shortcuts">11. Myš a klávesové zkratky</a>
+    <a href="#tips">12. Tipy a řešení problémů</a>
+    <a href="#glossary">13. Slovníček pojmů</a>
+    <a href="#about">14. O aplikaci</a>
+  </nav>
+
+  <section id="overview">
+    <h2>1. Přehled</h2>
+    <p><strong>Traffic Graph Explorer</strong> je desktopový nástroj pro tvorbu a analýzu orientovaných dopravních sítí s více zdroji a cíli (OD páry). Umožňuje kreslit uzly a hrany, přiřazovat nákladové funkce hranám, zadávat dopravní poptávku a spustit algoritmus dopravní rovnováhy k výpočtu toků a cestovních časů.</p>
+  </section>
+
+  <section id="requirements">
+    <h2>2. Požadavky</h2>
+    <ul>
+      <li>Python 3.9 nebo vyšší</li>
+      <li>Knihovny: <code>PySide6</code></li>
+      <li>Projektové moduly: <code>graphdata.graph_model.TrafficGraph</code>, <code>gui.zoomable_graphics_view.ZoomableGraphicsView</code></li>
+      <li>Styly (QSS): <code>styles/light.qss</code> (volitelně i tmavá varianta)</li>
+    </ul>
+  </section>
+
+  <section id="install">
+    <h2>3. Instalace</h2>
+    <ol>
+      <li>Nainstalujte závislosti:
+        <pre><code>pip install PySide6</code></pre>
+      </li>
+      <li>Ujistěte se, že moduly projektu jsou dostupné (spouštějte z kořenové složky projektu nebo nainstalujte jako balíček).</li>
+      <li>Umístěte soubory QSS do složky <code>styles/</code> a případné podklady (mapy) do <code>assets/</code>.</li>
+    </ol>
+  </section>
+
+  <section id="launch">
+    <h2>4. Spuštění aplikace</h2>
+    <ol>
+      <li>Spusťte hlavní soubor aplikace (např. <code>python -m app</code> nebo <code>main.py</code>).</li>
+      <li>Zobrazí se hlavní okno s názvem <em>„Traffic Graph Explorer (Directed + Multi-OD)“</em>.</li>
+    </ol>
+  </section>
+
+  <section id="ui-tour">
+    <h2>5. Přehled rozhraní</h2>
+    <p>Aplikace je rozdělena na <strong>hlavní plátno</strong> (Graphics View) a <strong>boční panel</strong> s ovládacími prvky.</p>
+    <ul>
+      <li><strong>Přepínač motivu</strong> — přepíná mezi světlým a tmavým režimem.</li>
+      <li><strong>Smazat graf</strong> — odstraní všechny uzly, hrany, OD páry a pozadí.</li>
+      <li><strong>Nastavit přesnost řešiče</strong> — určuje toleranci algoritmu rovnováhy.</li>
+      <li><strong>Přidat uzel</strong> — aktivuje režim přidávání uzlů.</li>
+      <li><strong>Odstranit vybrané</strong> — smaže označené uzly a hrany.</li>
+      <li><strong>Přidat hranu</strong> — vybere dva uzly a vytvoří orientovanou hranu.</li>
+      <li><strong>Upravit hranu</strong> — změní nákladovou funkci dané hrany.</li>
+      <li><strong>Načíst pozadí</strong> — vloží mapu či plán pod síť.</li>
+      <li><strong>Tabulka OD párů</strong> — obsahuje zdroj, cíl, poptávku a vypočtený čas.</li>
+      <li><strong>Vypočítat toky</strong> — spustí řešič a aktualizuje výsledky.</li>
+    </ul>
+  </section>
+
+  <section id="graphs">
+    <h2>6. Práce s grafy</h2>
+    <h3>Přidávání uzlů</h3>
+    <ol>
+      <li>Klikněte na <strong>Přidat uzel</strong> a poté kliknutím do plátna vytvořte uzly.</li>
+    </ol>
+    <h3>Přidávání hran</h3>
+    <ol>
+      <li>Vyberte dva uzly.</li>
+      <li>Klikněte na <strong>Přidat hranu</strong>.</li>
+    </ol>
+    <h3>Odstranění</h3>
+    <p>Označte prvky a klikněte na <strong>Odstranit vybrané</strong>.</p>
+  </section>
+
+  <section id="od">
+    <h2>7. Správa OD párů</h2>
+    <p>Tabulka obsahuje čtyři sloupce: Zdroj, Cíl, Poptávka a Čas. Pomocí tlačítek lze přidávat a mazat záznamy.</p>
+  </section>
+
+  <section id="solver">
+    <h2>8. Výpočet toků</h2>
+    <p>Tlačítkem <strong>Nastavit přesnost řešiče</strong> určete toleranci (výchozí <code>1e-4</code>), poté spusťte <strong>Vypočítat toky</strong>. Výsledky se zobrazí v tabulce OD párů.</p>
+  </section>
+
+  <section id="files">
+    <h2>9. Načítání a ukládání</h2>
+    <ul>
+      <li><strong>Soubor → Načíst graf</strong> — otevře uložený graf.</li>
+      <li><strong>Soubor → Uložit graf</strong> — uloží aktuální projekt.</li>
+    </ul>
+  </section>
+
+  <section id="themes">
+    <h2>10. Motivy</h2>
+    <p>Přepínač <strong>Switch theme</strong> mění vzhled mezi světlým a tmavým. Výchozí je <code>styles/light.qss</code>. Uzly a popisky se přebarvují podle motivu.</p>
+  </section>
+
+  <section id="shortcuts">
+    <h2>11. Myš a klávesové zkratky</h2>
+    <ul>
+      <li><strong>Levé tlačítko</strong> — výběr nebo přidání uzlu.</li>
+      <li><strong>Kolečko myši</strong> — přiblížení/oddálení.</li>
+      <li><strong>Ctrl</strong> + <strong>S</strong> — uložit.</li>
+      <li><strong>Delete</strong> — odstranit vybrané prvky.</li>
+    </ul>
+  </section>
+
+  <section id="tips">
+    <h2>12. Tipy a řešení problémů</h2>
+    <ul>
+      <li><em>Řešič nefunguje:</em> Zkontrolujte, zda máte zadané OD páry.</li>
+      <li><em>Nezobrazené uzly:</em> Zkuste přepnout motiv.</li>
+      <li><em>Chybějící soubory:</em> Ověřte umístění <code>styles/*.qss</code>.</li>
+    </ul>
+  </section>
+
+  <section id="glossary">
+    <h2>13. Slovníček pojmů</h2>
+    <ul>
+      <li><strong>OD pár</strong>: kombinace zdroje, cíle a poptávky.</li>
+      <li><strong>Nákladová funkce</strong>: vztah mezi tokem a cestovní dobou.</li>
+      <li><strong>Tolerance</strong>: přesnost numerického řešení.</li>
+    </ul>
+  </section>
+
+  <section id="about">
+    <h2>14. O aplikaci</h2>
+    <p>Tento manuál popisuje uživatelské rozhraní třídy <code>MainWindowUI</code> (PySide6) a je určen jako výchozí návrh pro dokumentaci projektu. Doporučuje se doplnit o vlastní popisy, snímky obrazovky a příklady.</p>
+  </section>
+
+  <footer>
+    © <span id="year"></span> Traffic Graph Explorer — Návrh uživatelského manuálu.
+  </footer>
+</main>
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
