@@ -25,6 +25,7 @@ class MainWindow(MainWindowUI):
 
     def __init__(self):
         super().__init__()
+        self.add_node_mode = False
         self._connect_signals()
         self._setup_shortcuts()
         self.view.viewport().installEventFilter(self)
@@ -78,9 +79,15 @@ class MainWindow(MainWindowUI):
     # ============================================================
 
     def enable_add_node_mode(self):
-        """Enable node placement mode."""
-        self.add_node_mode = True
-        self.status.setText("Click on canvas to add node")
+        """Toggle node placement mode."""
+        self.add_node_mode = not self.add_node_mode
+
+        if self.add_node_mode:
+            self.status.setText("Add Node mode active. Click on canvas to add nodes.")
+            self.add_node_btn.setText("Stop Add Node")
+        else:
+            self.status.setText("Add Node mode disabled.")
+            self.add_node_btn.setText("Add Node")
 
     def eventFilter(self, obj, event):
         """Handle mouse events for node placement."""
@@ -88,8 +95,11 @@ class MainWindow(MainWindowUI):
             if self.add_node_mode:
                 pos = self.view.mapToScene(event.pos())
                 self.add_node((pos.x(), pos.y()))
-                self.add_node_mode = False
+
+                # Do NOT disable add_node_mode here.
+                # This keeps Add Node active until the button is pressed again.
                 return True
+
         return super().eventFilter(obj, event)
 
     def add_node(self, pos_xy):
