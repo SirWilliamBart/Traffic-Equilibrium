@@ -6,6 +6,7 @@ from PySide6.QtGui import QImage, QPixmap, QColor, QKeySequence, QShortcut
 
 from graphdata.graph_model import UnsafeExpression
 from algo.algorithms import frank_wolfe_assignment, compute_od_travel_times
+from algo.minimum_spannig_tree import minimum_spanning_tree_info
 from gui.graphics_items import NodeItem, EdgeItem
 from gui.main_window_ui import MainWindowUI
 
@@ -61,6 +62,7 @@ class MainWindow(MainWindowUI):
         self.add_od_btn.clicked.connect(self.add_od_pair)
         self.remove_od_btn.clicked.connect(self.remove_selected_od_pairs)
         self.run_btn.clicked.connect(self.recalculate)
+        self.mst_action.triggered.connect(self.calculate_minimum_spanning_tree)
         self.load_graph_action.triggered.connect(self.load_graph)
         self.save_graph_action.triggered.connect(self.save_graph)
         self.open_help_action.triggered.connect(self.open_help)
@@ -486,6 +488,49 @@ class MainWindow(MainWindowUI):
     # ============================================================
     # CALCULATION
     # ============================================================
+
+    def calculate_minimum_spanning_tree(self):
+        """
+        Calculate the minimum spanning tree and highlight it by selecting its edges.
+        """
+
+        try:
+            result = minimum_spanning_tree_info(
+                self.tgraph,
+                weight_mode="current_cost"
+            )
+        except Exception as exc:
+            QMessageBox.critical(
+                self,
+                "Minimum Spanning Tree Error",
+                f"Could not calculate minimum spanning tree:\n{exc}"
+            )
+            return
+
+        mst_edges = set(result["edges"])
+
+        # Clear previous edge selection
+        for edge_item in self.edge_items.values():
+            edge_item.setSelected(False)
+
+        # Select/highlight MST edges
+        for edge in mst_edges:
+            edge_item = self.edge_items.get(edge)
+            if edge_item is not None:
+                edge_item.setSelected(True)
+
+        self.update_edge_label_visibility()
+
+        if result["is_connected"]:
+            self.status.setText(
+                f"Minimum spanning tree selected: "
+                f"{len(mst_edges)} edges, total weight = {result['total_weight']:.3f}"
+            )
+        else:
+            self.status.setText(
+                f"Graph is disconnected. Minimum spanning forest selected: "
+                f"{len(mst_edges)} edges, {result['component_count']} components."
+            )
 
     def recalculate(self):
         """Run the traffic assignment calculation and update display."""

@@ -239,6 +239,11 @@ class MainWindowUI(QMainWindow):
         self.clear_background_action = background_menu.addAction("Clear background")
         self.clear_background_action.setToolTip("Remove the background image")
 
+        more_menu = self.menuBar().addMenu("More")
+        more_menu.setToolTipsVisible(True)
+        self.mst_action = more_menu.addAction("Spannig tree")
+        self.mst_action.setToolTip("Calculates minumum spannig tree.")
+
     def apply_theme(self, qss_path):
         """Load and apply a QSS stylesheet."""
         try:
