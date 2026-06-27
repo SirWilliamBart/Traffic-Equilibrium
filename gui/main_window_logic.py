@@ -14,11 +14,13 @@ import os
 import time
 import webbrowser
 
+
 def resource_path(relative_path):
     # When bundled, data files are unpacked to sys._MEIPASS
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
+
 
 class MainWindow(MainWindowUI):
     """Main window with logic and event handling."""
@@ -39,6 +41,15 @@ class MainWindow(MainWindowUI):
     def _connect_signals(self):
         """Connect all UI signals to their handlers."""
         self.theme_switch.stateChanged.connect(self.toggle_theme)
+
+        # NEW:
+        # Toggle button changes edge label visibility mode.
+        self.edge_labels_btn.toggled.connect(self.toggle_edge_label_visibility_mode)
+
+        # NEW:
+        # Whenever selection changes, update which labels are visible.
+        self.scene.selectionChanged.connect(self.update_edge_label_visibility)
+
         self.clear_graph_btn.clicked.connect(self.clear_graph)
         self.set_accuracy_btn.clicked.connect(self.set_solver_accuracy)
         self.add_node_btn.clicked.connect(self.enable_add_node_mode)
@@ -116,20 +127,22 @@ class MainWindow(MainWindowUI):
         self.scene.addItem(n)
         self.node_items[nid] = n
 
-        # NEW: immediately apply current theme so the node matches dark/light mode
+        # Immediately apply current theme so the node matches dark/light mode.
         self.update_graph_colors_for_theme()
 
     def on_node_moved_fast(self, node_id, pos):
-        """Fast update during node drag (geometry only)."""
+        """Fast update during node drag; geometry only."""
         self.tgraph.set_node_pos(node_id, pos)
         for e in self.incident_edges.get(node_id, ()):
             e.update_geometry_fast()
 
     def on_node_released(self, node_id, pos):
-        """Update after node release (reposition labels)."""
+        """Update after node release; reposition labels."""
         self.tgraph.set_node_pos(node_id, pos)
         for e in self.incident_edges.get(node_id, ()):
             e.update_position(reposition_label=True)
+
+        self.update_edge_label_visibility()
 
     # ============================================================
     # EDGE MANAGEMENT
@@ -183,7 +196,7 @@ class MainWindow(MainWindowUI):
             selected = [a, b]
 
         #
-        # CASE 2: Selected exactly 2 (original behavior)
+        # CASE 2: Selected exactly 2
         #
         elif len(selected) != 2:
             QMessageBox.information(self, "Select 2", "Select exactly two nodes.")
@@ -243,6 +256,8 @@ class MainWindow(MainWindowUI):
         e.setToolTip(f"Edge {u} → {v}\nExpression: {expr}\nFlow = 0.0\nCost = {initial_cost:.2f}")
         e.update_position(reposition_label=True)
 
+        self.update_edge_label_visibility()
+
     def edit_selected_edge(self):
         """Edit the cost expression of a selected edge."""
         selected_edges = [it for it in self.scene.selectedItems() if isinstance(it, EdgeItem)]
@@ -262,6 +277,8 @@ class MainWindow(MainWindowUI):
             except UnsafeExpression as e:
                 QMessageBox.critical(self, "Invalid expression", str(e))
                 return
+
+            self.recalculate()
             return
 
         if len(selected_edges) > 1:
@@ -328,7 +345,7 @@ class MainWindow(MainWindowUI):
             if not ok_n:
                 return
 
-            # --- Process edge removals ---
+            # Process edge removals
             if text_edges.strip():
                 pairs = text_edges.split()
                 for p in pairs:
@@ -345,7 +362,7 @@ class MainWindow(MainWindowUI):
 
                     self._remove_edge(u, v)
 
-            # --- Process node removals ---
+            # Process node removals
             if text_nodes.strip():
                 nodes_to_delete = text_nodes.split()
                 for n_s in nodes_to_delete:
@@ -374,10 +391,11 @@ class MainWindow(MainWindowUI):
                     self.node_items.pop(nid, None)
                     self.incident_edges.pop(nid, None)
 
-            return  # Done handling "nothing selected" case
+            self.update_edge_label_visibility()
+            return
 
         #
-        # CASE: Something is selected → original behavior
+        # CASE: Something is selected
         #
         for item in list(selected):
             if isinstance(item, NodeItem):
@@ -394,10 +412,13 @@ class MainWindow(MainWindowUI):
             elif isinstance(item, EdgeItem):
                 self._remove_edge(item.u, item.v)
 
+        self.update_edge_label_visibility()
+
     def _remove_edge(self, u, v):
         """Remove an edge from the graph."""
         if self.tgraph.G.has_edge(u, v):
             self.tgraph.G.remove_edge(u, v)
+
         if (u, v) in self.edge_items:
             e = self.edge_items.pop((u, v))
             if u in self.incident_edges:
@@ -411,6 +432,7 @@ class MainWindow(MainWindowUI):
                 except ValueError:
                     pass
             self.scene.removeItem(e)
+
         if (v, u) in self.edge_items:
             self.edge_items[(v, u)].offset = 0.0
             self.edge_items[(v, u)].update_position(reposition_label=True)
@@ -517,6 +539,40 @@ class MainWindow(MainWindowUI):
             self.od_table.setItem(row, 3, item)
 
         self.status.setText(f"Solved in {elapsed:.3f} s (tol={self.current_tol:.1e})")
+        self.update_edge_label_visibility()
+
+    # ============================================================
+    # EDGE LABEL VISIBILITY
+    # ============================================================
+
+    def toggle_edge_label_visibility_mode(self, checked):
+        """
+        Toggle whether edge labels are always visible or visible only
+        for selected edges.
+        """
+        self.selected_edge_labels_only = checked
+        self.update_edge_label_visibility()
+
+        if checked:
+            self.status.setText("Edge labels shown only for selected edges.")
+        else:
+            self.status.setText("All edge labels shown.")
+
+    def update_edge_label_visibility(self):
+        """
+        Update edge label visibility according to the current mode.
+
+        If selected_edge_labels_only is False:
+            all edge labels are visible.
+
+        If selected_edge_labels_only is True:
+            only labels of selected edges are visible.
+        """
+        for edge in self.edge_items.values():
+            if self.selected_edge_labels_only:
+                edge.label.setVisible(edge.isSelected())
+            else:
+                edge.label.setVisible(True)
 
     # ============================================================
     # CLEAR
@@ -538,7 +594,7 @@ class MainWindow(MainWindowUI):
     # ============================================================
 
     def load_graph(self):
-        """Load a graph from a file (JSON or XML), including OD pairs."""
+        """Load a graph from a file, JSON or XML, including OD pairs."""
         path, _ = QFileDialog.getOpenFileName(
             self, "Load Graph", "", "Graph Files (*.json *.xml);;All Files (*)"
         )
@@ -557,7 +613,7 @@ class MainWindow(MainWindowUI):
                 QMessageBox.warning(self, "Error", "Unsupported format.")
                 return
 
-            # --- Rebuild nodes in scene ---
+            # Rebuild nodes in scene
             for nid, pos in self.tgraph.nodes_positions().items():
                 n = NodeItem(
                     nid,
@@ -568,7 +624,7 @@ class MainWindow(MainWindowUI):
                 self.scene.addItem(n)
                 self.node_items[nid] = n
 
-            # --- Rebuild edges in scene ---
+            # Rebuild edges in scene
             added = set()
             for (u, v, _) in self.tgraph.G.edges(data=True):
                 if (u, v) in added:
@@ -625,7 +681,7 @@ class MainWindow(MainWindowUI):
 
                     added.add((u, v))
 
-            # --- Load OD pairs into table ---
+            # Load OD pairs into table
             self.od_table.setRowCount(0)
             for o, d, q in od_pairs:
                 row = self.od_table.rowCount()
@@ -633,6 +689,9 @@ class MainWindow(MainWindowUI):
                 self.od_table.setItem(row, 0, QTableWidgetItem(str(o)))
                 self.od_table.setItem(row, 1, QTableWidgetItem(str(d)))
                 self.od_table.setItem(row, 2, QTableWidgetItem(str(q)))
+
+            self.update_graph_colors_for_theme()
+            self.update_edge_label_visibility()
 
             QMessageBox.information(self, "Success", f"Loaded {os.path.basename(path)}")
 
@@ -652,7 +711,7 @@ class MainWindow(MainWindowUI):
             return
 
         try:
-            # --- Extract OD pairs from table ---
+            # Extract OD pairs from table
             od_pairs = []
             for row in range(self.od_table.rowCount()):
                 try:
@@ -663,7 +722,7 @@ class MainWindow(MainWindowUI):
                 except:
                     pass
 
-            # --- Save file ---
+            # Save file
             if path.lower().endswith(".json"):
                 self.tgraph.save_to_json(path, od_pairs=od_pairs)
 
@@ -690,11 +749,11 @@ class MainWindow(MainWindowUI):
 
         if self.dark_mode:
             self.apply_theme(resource_path("styles/dark.qss"))
-
         else:
             self.apply_theme(resource_path("styles/light.qss"))
 
         self.update_graph_colors_for_theme()
+        self.update_edge_label_visibility()
 
     # ============================================================
     # HELP
@@ -771,3 +830,5 @@ class MainWindow(MainWindowUI):
         self.od_table.item(0, 2).setText("4000")
 
         self.recalculate()
+        self.update_graph_colors_for_theme()
+        self.update_edge_label_visibility()

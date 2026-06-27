@@ -11,7 +11,8 @@ from gui.zoomable_graphics_view import ZoomableGraphicsView
 import os
 import sys
 
-#clean is now in main_window_ui and main_window_logic, should be in only one
+
+# clean is now in main_window_ui and main_window_logic, should be in only one
 def resource_path(relative_path):
     # When bundled, data files are unpacked to sys._MEIPASS
     if hasattr(sys, '_MEIPASS'):
@@ -84,6 +85,11 @@ class MainWindowUI(QMainWindow):
         self.dark_mode = False
         self.current_tol = 1e-4
 
+        # NEW:
+        # When True, labels are visible only for selected edges.
+        # When False, all edge labels are visible.
+        self.selected_edge_labels_only = False
+
         # Data structures
         self.tgraph = TrafficGraph()
         self.node_items = {}
@@ -142,16 +148,23 @@ class MainWindowUI(QMainWindow):
         self.status = QLabel("")
         panel.addWidget(self.status)
 
-        panel.addStretch()
+        # Theme toggle + edge label toggle in one row
+        toggle_row = QHBoxLayout()
 
-        # 🔹 Add the completed side widget to the splitter
-        parent_splitter.addWidget(side_widget)
-
-        # Theme Toggle
         self.theme_switch = QCheckBox("Switch theme")
         self.theme_switch.setToolTip("Switch between light and dark interface theme.")
         self.theme_switch.setChecked(False)
-        panel.addWidget(self.theme_switch)
+        toggle_row.addWidget(self.theme_switch)
+
+        self.edge_labels_btn = QCheckBox("Selected labels")
+        self.edge_labels_btn.setObjectName("edgeLabelsToggle")
+        self.edge_labels_btn.setToolTip(
+            "When active, labels are shown only for selected edges."
+        )
+        self.edge_labels_btn.setChecked(False)
+        toggle_row.addWidget(self.edge_labels_btn)
+
+        panel.addLayout(toggle_row)
 
         # Add Node Button
         self.add_node_btn = QPushButton("Add node")
@@ -205,11 +218,10 @@ class MainWindowUI(QMainWindow):
         self.run_btn.setToolTip("Run equilibrium solver and update flows and travel costs.")
         panel.addWidget(self.run_btn)
 
-        # Status Label
-        self.status = QLabel("")
-        panel.addWidget(self.status)
-
         panel.addStretch()
+
+        # Add the completed side widget to the splitter
+        parent_splitter.addWidget(side_widget)
 
     def _setup_menu_bar(self):
         """Setup menu bar with File and Help menus."""
@@ -224,7 +236,7 @@ class MainWindowUI(QMainWindow):
         background_menu.setToolTipsVisible(True)
         self.load_background_action = background_menu.addAction("Load background")
         self.load_background_action.setToolTip("Place a map or blueprint image behind the graph.")
-        self.clear_background_action = background_menu.addAction("Cleare background")
+        self.clear_background_action = background_menu.addAction("Clear background")
         self.clear_background_action.setToolTip("Remove the background image")
 
     def apply_theme(self, qss_path):

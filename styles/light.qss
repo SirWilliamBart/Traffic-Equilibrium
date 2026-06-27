@@ -120,3 +120,42 @@ QCheckBox::indicator:checked::before {
     margin-left: 21px;
 }
 
+/* ---- Edge labels toggle ---- */
+/* Same rounded shape as theme switch, but custom white / light-blue colors */
+
+QCheckBox#edgeLabelsToggle {
+    spacing: 8px;
+}
+
+/* Initial state: white */
+QCheckBox#edgeLabelsToggle::indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 9px;
+
+    background-color: #FFFFFF;
+    border: 1px solid #3A6EA5;
+
+    image: none;
+}
+
+/* Hover in initial state */
+QCheckBox#edgeLabelsToggle::indicator:hover {
+    background-color: #EAF4FF;
+    border: 1px solid #3A6EA5;
+}
+
+/* Active state for light mode */
+QCheckBox#edgeLabelsToggle::indicator:checked {
+    background-color: #66CCFF;
+    border: 1px solid #3A6EA5;
+
+    image: none;
+}
+
+/* Hover when active */
+QCheckBox#edgeLabelsToggle::indicator:checked:hover {
+    background-color: #42A5F5;
+    border: 1px solid #3A6EA5;
+}
+
