@@ -7,6 +7,7 @@ from PySide6.QtGui import QImage, QPixmap, QColor, QKeySequence, QShortcut
 from graphdata.graph_model import UnsafeExpression
 from algo.algorithms import frank_wolfe_assignment, compute_od_travel_times
 from algo.minimum_spannig_tree import minimum_spanning_tree_info
+from algo.minimum_spanning_arborescence import directed_spanning_tree_info
 from gui.graphics_items import NodeItem, EdgeItem
 from gui.main_window_ui import MainWindowUI
 
@@ -63,6 +64,7 @@ class MainWindow(MainWindowUI):
         self.remove_od_btn.clicked.connect(self.remove_selected_od_pairs)
         self.run_btn.clicked.connect(self.recalculate)
         self.mst_action.triggered.connect(self.calculate_minimum_spanning_tree)
+        self.msa_action.triggered.connect(self.calculate_directed_spanning_tree)
         self.load_graph_action.triggered.connect(self.load_graph)
         self.save_graph_action.triggered.connect(self.save_graph)
         self.open_help_action.triggered.connect(self.open_help)
@@ -489,9 +491,26 @@ class MainWindow(MainWindowUI):
     # CALCULATION
     # ============================================================
 
+    def _select_edges(self, edges):
+        """Select/highlight given edges in the scene."""
+        edge_set = set(edges)
+
+        for edge_item in self.edge_items.values():
+            edge_item.setSelected(False)
+
+        for edge in edge_set:
+            edge_item = self.edge_items.get(edge)
+            if edge_item is not None:
+                edge_item.setSelected(True)
+
+        self.update_edge_label_visibility()
+
     def calculate_minimum_spanning_tree(self):
         """
-        Calculate the minimum spanning tree and highlight it by selecting its edges.
+        Calculate classic MST.
+
+        This treats the graph as undirected.
+        Useful for comparing the cheapest physical connection structure.
         """
 
         try:
@@ -507,30 +526,51 @@ class MainWindow(MainWindowUI):
             )
             return
 
-        mst_edges = set(result["edges"])
+        self._select_edges(result["edges"])
 
-        # Clear previous edge selection
-        for edge_item in self.edge_items.values():
-            edge_item.setSelected(False)
+        self.status.setText(
+            f"Minimum spanning tree selected: "
+            f"{len(result['edges'])} edges, total weight = {result['total_weight']:.3f}"
+        )
 
-        # Select/highlight MST edges
-        for edge in mst_edges:
-            edge_item = self.edge_items.get(edge)
-            if edge_item is not None:
-                edge_item.setSelected(True)
+    def calculate_directed_spanning_tree(self):
+        """
+        Calculate directed spanning tree.
 
-        self.update_edge_label_visibility()
+        This respects edge direction.
+        The root is taken from the origin of the first OD pair if possible.
+        """
 
-        if result["is_connected"]:
-            self.status.setText(
-                f"Minimum spanning tree selected: "
-                f"{len(mst_edges)} edges, total weight = {result['total_weight']:.3f}"
+        root = None
+
+        if self.od_table.rowCount() > 0:
+            try:
+                root = int(self.od_table.item(0, 0).text())
+            except:
+                root = None
+
+        try:
+            result = directed_spanning_tree_info(
+                self.tgraph,
+                weight_mode="current_cost",
+                root=root
             )
-        else:
-            self.status.setText(
-                f"Graph is disconnected. Minimum spanning forest selected: "
-                f"{len(mst_edges)} edges, {result['component_count']} components."
+        except Exception as exc:
+            QMessageBox.critical(
+                self,
+                "Directed Spanning Tree Error",
+                f"Could not calculate directed spanning tree:\n{exc}"
             )
+            return
+
+        self._select_edges(result["edges"])
+
+        self.status.setText(
+            f"Directed spanning tree selected: "
+            f"{len(result['edges'])} edges, "
+            f"root = {result['root']}, "
+            f"total weight = {result['total_weight']:.3f}"
+        )
 
     def recalculate(self):
         """Run the traffic assignment calculation and update display."""

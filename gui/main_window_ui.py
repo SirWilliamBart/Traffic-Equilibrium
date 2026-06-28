@@ -242,7 +242,9 @@ class MainWindowUI(QMainWindow):
         more_menu = self.menuBar().addMenu("More")
         more_menu.setToolTipsVisible(True)
         self.mst_action = more_menu.addAction("Spannig tree")
-        self.mst_action.setToolTip("Calculates minumum spannig tree.")
+        self.mst_action.setToolTip("Calculates minumum spannig tree, ignores edge direction.")
+        self.msa_action = more_menu.addAction("Directed spannig tree")
+        self.msa_action.setToolTip("Calculates minumum spannig tree, respects edge direction.")
 
     def apply_theme(self, qss_path):
         """Load and apply a QSS stylesheet."""
